@@ -11,12 +11,12 @@
     --ink-faint: #6b7099;
 
     /* house colors */
-    --h1: #ff5a4d;  /* Ember   */
-    --h2: #ffb23e;  /* Solstice*/
-    --h3: #2bd17e;  /* Verdant */
-    --h4: #38b6ff;  /* Tide    */
-    --h5: #a06bff;  /* Nebula  */
-    --h6: #ff6fb5;  /* Blossom */
+    --h1: #029145;  /* Ember   */
+    --h2: #223b90;  /* Solstice*/
+    --h3: #652c90;  /* Verdant */
+    --h4: #fe0000;  /* Tide    */
+    --h5: #000000;  /* Nebula  */
+    --h6: #da6f02;  /* Blossom */
 
     --radius: 22px;
     --radius-sm: 14px;
