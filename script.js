@@ -1,23 +1,19 @@
-/* =========================================================================
-   CONFIG — edit these
-   ========================================================================= */
-const TARGET = 1000;            // liveliness meter threshold → triggers animation
+const TARGET = 1000;
+const CHECKPOINTS = [0.2, 0.4, 0.6, 0.8, 1];
 const houses = [
-    { id: 'h1', name: 'Corvex',    color: 'var(--h1)', hex: '#029145', score: 0 },
-    { id: 'h2', name: 'Osceanna', color: 'var(--h2)', hex: '#223b90', score: 0 },
-    { id: 'h3', name: 'Idalia',  color: 'var(--h3)', hex: '#652c90', score: 0 },
-    { id: 'h4', name: 'Levios',     color: 'var(--h4)', hex: '#fe0000', score: 0 },
-    { id: 'h5', name: 'Kairos',   color: 'var(--h5)', hex: '#000000', score: 0 },
-    { id: 'h6', name: 'Perseus',  color: 'var(--h6)', hex: '#da6f02', score: 0 },
+  { id: 'h1', name: 'Corvex', color: 'var(--h1)', hex: '#029145', score: 0 },
+  { id: 'h2', name: 'Osceanna', color: 'var(--h2)', hex: '#223b90', score: 0 },
+  { id: 'h3', name: 'Idalia', color: 'var(--h3)', hex: '#652c90', score: 0 },
+  { id: 'h4', name: 'Levios', color: 'var(--h4)', hex: '#fe0000', score: 0 },
+  { id: 'h5', name: 'Kairos', color: 'var(--h5)', hex: '#000000', score: 0 },
+  { id: 'h6', name: 'Perseus', color: 'var(--h6)', hex: '#da6f02', score: 0 }
 ];
 
-/* =========================================================================
-   STATE + RENDER
-   ========================================================================= */
 let target = TARGET;
-let celebrated = false;          // so the animation fires once per crossing
-const display = {};              // smoothly animated on-screen numbers
-houses.forEach(h => display[h.id] = 0);
+let celebrated = false;
+let unlockedPieces = 0;
+const display = {};
+houses.forEach((house) => { display[house.id] = 0; });
 
 const grid = document.getElementById('grid');
 const totalValueEl = document.getElementById('totalValue');
@@ -25,195 +21,153 @@ const fillEl = document.getElementById('fill');
 const meterNowEl = document.getElementById('meterNow');
 const meterTargetEl = document.getElementById('meterTarget');
 const meterEl = document.getElementById('meter');
+const statusEl = document.getElementById('connectionStatus');
+const adminMessageEl = document.getElementById('adminMessage');
 
-// build cards
-houses.forEach(h => {
-    const el = document.createElement('article');
-    el.className = 'card';
-    el.id = 'card-' + h.id;
-    el.style.setProperty('--c', h.color);
-    el.innerHTML = `
-    <div class="stripe"></div>
-    <div class="card-top">
-      <div class="house-name">${h.name}</div>
-      <div class="rank" id="rank-${h.id}">—</div>
-    </div>
-    <div class="score" id="score-${h.id}">0</div>`;
-    grid.appendChild(el);
+houses.forEach((house) => {
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.id = `card-${house.id}`;
+  el.style.setProperty('--c', house.color);
+  el.innerHTML = `<div class="stripe"></div><div class="card-top"><div class="house-name">${house.name}</div><div class="rank" id="rank-${house.id}">-</div></div><div class="score" id="score-${house.id}">0</div>`;
+  grid.appendChild(el);
 });
 
-function total() { return houses.reduce((s,h) => s + h.score, 0); }
-
+function total() { return houses.reduce((sum, house) => sum + house.score, 0); }
 function render() {
-    // ranks
-    const ranked = [...houses].sort((a,b) => b.score - a.score);
-    const place = {};
-    ranked.forEach((h,i) => place[h.id] = i + 1);
-    const ord = ['1st','2nd','3rd','4th','5th','6th'];
-    houses.forEach(h => {
-        document.getElementById('rank-' + h.id).textContent = ord[place[h.id]-1];
-        const card = document.getElementById('card-' + h.id);
-        card.classList.toggle('leader', place[h.id] === 1 && h.score > 0);
-    });
-
-    // meter
-    const t = total();
-    meterTargetEl.textContent = target;
-    meterNowEl.textContent = t;
-    const pct = Math.max(0, Math.min(100, (t / target) * 100));
-    fillEl.style.width = pct + '%';
-
-    // celebrate on crossing the target
-    if (t >= target && !celebrated) { celebrate(); celebrated = true; meterEl.classList.add('lit'); }
-    if (t < target) { celebrated = false; meterEl.classList.remove('lit'); }
+  const ranked = [...houses].sort((a, b) => b.score - a.score);
+  const place = {};
+  ranked.forEach((house, index) => { place[house.id] = index + 1; });
+  const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+  houses.forEach((house) => {
+    document.getElementById(`rank-${house.id}`).textContent = ord[place[house.id] - 1];
+    document.getElementById(`card-${house.id}`).classList.toggle('leader', place[house.id] === 1 && house.score > 0);
+  });
+  const currentTotal = total();
+  meterTargetEl.textContent = target;
+  meterNowEl.textContent = currentTotal;
+  fillEl.style.width = `${Math.max(0, Math.min(100, (currentTotal / target) * 100))}%`;
+  updateJigsaw(currentTotal / target);
+  if (currentTotal >= target && !celebrated) { celebrate(); celebrated = true; meterEl.classList.add('lit'); }
+  if (currentTotal < target) { celebrated = false; meterEl.classList.remove('lit'); }
 }
-
-/* smooth count-up for the big numbers */
 function animateNumbers() {
-    let any = false;
-    houses.forEach(h => {
-        const cur = display[h.id];
-        if (cur !== h.score) {
-            const diff = h.score - cur;
-            const step = Math.sign(diff) * Math.max(1, Math.ceil(Math.abs(diff) / 8));
-            display[h.id] = Math.abs(step) >= Math.abs(diff) ? h.score : cur + step;
-            document.getElementById('score-' + h.id).textContent = display[h.id];
-            any = true;
-        }
-    });
-    const shownTotal = houses.reduce((s,h) => s + display[h.id], 0);
-    totalValueEl.textContent = shownTotal;
-    if (any) requestAnimationFrame(animateNumbers);
+  let any = false;
+  houses.forEach((house) => {
+    const cur = display[house.id];
+    if (cur !== house.score) {
+      const diff = house.score - cur;
+      const step = Math.sign(diff) * Math.max(1, Math.ceil(Math.abs(diff) / 8));
+      display[house.id] = Math.abs(step) >= Math.abs(diff) ? house.score : cur + step;
+      document.getElementById(`score-${house.id}`).textContent = display[house.id];
+      any = true;
+    }
+  });
+  totalValueEl.textContent = houses.reduce((sum, house) => sum + display[house.id], 0);
+  if (any) requestAnimationFrame(animateNumbers);
 }
-
-/* =========================================================================
-   PUBLIC API — call these from the WebSocket handler
-   ========================================================================= */
+function updateJigsaw(progress) {
+  const pieces = document.querySelectorAll('.piece');
+  const nextUnlocked = CHECKPOINTS.filter((checkpoint) => progress >= checkpoint).length;
+  pieces.forEach((piece, index) => piece.classList.toggle('revealed', index < nextUnlocked));
+  if (nextUnlocked > unlockedPieces && nextUnlocked > 0) {
+    document.getElementById('banner').textContent = `OLLIE PIECE ${nextUnlocked}!`;
+    celebrate();
+    setTimeout(() => { document.getElementById('banner').textContent = 'MAX HYPE!'; }, 2600);
+  }
+  unlockedPieces = nextUnlocked;
+}
 function setScore(id, value) {
-    const h = houses.find(x => x.id === id || x.name.toLowerCase() === String(id).toLowerCase());
-    if (!h) return;
-    h.score = value;
-    bump(h.id); render(); requestAnimationFrame(animateNumbers);
+  const house = houses.find((item) => item.id === id || item.name.toLowerCase() === String(id).toLowerCase());
+  if (!house) return;
+  house.score = Number(value) || 0;
+  bump(house.id); render(); requestAnimationFrame(animateNumbers);
 }
-function addScore(id, delta) {
-    const h = houses.find(x => x.id === id || x.name.toLowerCase() === String(id).toLowerCase());
-    if (!h) return;
-    h.score += delta;
-    bump(h.id); render(); requestAnimationFrame(animateNumbers);
-}
+function setScores(scores) { Object.entries(scores || {}).forEach(([id, value]) => setScore(id, value)); }
 function bump(id) {
-    const card = document.getElementById('card-' + id);
-    if (!card) return;
-    card.setAttribute('data-bump','1');
-    setTimeout(() => card.removeAttribute('data-bump'), 600);
+  const card = document.getElementById(`card-${id}`);
+  if (!card) return;
+  card.setAttribute('data-bump', '1');
+  setTimeout(() => card.removeAttribute('data-bump'), 600);
 }
-
-/* =========================================================================
-   WEBSOCKET — plug your backend in here (commented until the server exists)
-   ========================================================================= */
-/*
-  const ws = new WebSocket('wss://your-server.com');
+function connectSocket() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${protocol}//${location.host}`);
+  ws.onopen = () => { statusEl.textContent = 'Live connected'; statusEl.className = 'connection ok'; };
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data);
-    // expecting e.g. { houses: { h1: 120, h2: 80, ... } }  OR  { id:'h1', delta:35 }
-    if (msg.houses) { for (const k in msg.houses) setScore(k, msg.houses[k]); }
-    else if (msg.id && msg.delta != null) { addScore(msg.id, msg.delta); }
-    else if (msg.id && msg.score != null) { setScore(msg.id, msg.score); }
+    if (msg.type === 'scores' || msg.type === 'reset' || msg.type === 'undo') setScores(msg.scores);
+    else if (msg.type === 'scoreUpdate') setScore(msg.team, msg.newScore);
   };
-  ws.onclose = () => setTimeout(() => location.reload(), 3000); // simple auto-reconnect
-*/
+  ws.onclose = () => { statusEl.textContent = 'Disconnected - retrying'; statusEl.className = 'connection warn'; setTimeout(connectSocket, 3000); };
+  ws.onerror = () => { statusEl.textContent = 'Connection issue'; statusEl.className = 'connection warn'; };
+}
+async function postJson(url, body) {
+  const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await response.json();
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+function wireAdminPanel() {
+  const panel = document.getElementById('adminPanel');
+  const usernameInput = document.getElementById('usernameInput');
+  const savedUsername = localStorage.getItem('nusc-admin-username');
+  if (savedUsername) usernameInput.value = savedUsername;
+  document.getElementById('adminToggle').addEventListener('click', () => panel.classList.toggle('open'));
+  document.getElementById('scoreForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const username = usernameInput.value.trim();
+    localStorage.setItem('nusc-admin-username', username);
+    try {
+      const data = await postJson('/api/score', { username, team: document.getElementById('teamInput').value, delta: Number(document.getElementById('deltaInput').value) });
+      adminMessageEl.textContent = `${data.team} is now ${data.newScore}`;
+    } catch (err) { adminMessageEl.textContent = err.message; }
+  });
+  document.getElementById('undoBtn').addEventListener('click', async () => {
+    const username = usernameInput.value.trim();
+    localStorage.setItem('nusc-admin-username', username);
+    try { await postJson('/api/undo', { username }); adminMessageEl.textContent = 'Latest score update undone'; }
+    catch (err) { adminMessageEl.textContent = err.message; }
+  });
+}
 
-/* =========================================================================
-   CELEBRATION (confetti + flash + banner)
-   ========================================================================= */
 const canvas = document.getElementById('confetti');
 const ctx = canvas.getContext('2d');
-let pieces = [];
-function sizeCanvas(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-sizeCanvas(); addEventListener('resize', sizeCanvas);
-
-function celebrate() {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // banner + flash
-    const banner = document.getElementById('banner');
-    const flash = document.getElementById('flash');
-    banner.classList.add('on'); flash.classList.add('on');
-    setTimeout(() => flash.classList.remove('on'), 260);
-    setTimeout(() => banner.classList.remove('on'), 2600);
-    if (reduce) return;
-
-    const colors = houses.map(h => h.hex).concat(['#ffffff']);
-    for (let i = 0; i < 220; i++) {
-        pieces.push({
-            x: innerWidth/2 + (Math.random()-0.5)*120,
-            y: innerHeight*0.45,
-            vx: (Math.random()-0.5)*16,
-            vy: Math.random()*-15 - 4,
-            g: 0.35 + Math.random()*0.15,
-            size: 6 + Math.random()*7,
-            rot: Math.random()*Math.PI,
-            vr: (Math.random()-0.5)*0.3,
-            color: colors[(Math.random()*colors.length)|0],
-            life: 0
-        });
-    }
-    if (pieces.length) runConfetti();
-}
+let confettiPieces = [];
 let raf = null;
+function sizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight; }
+sizeCanvas();
+addEventListener('resize', sizeCanvas);
+function celebrate() {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const banner = document.getElementById('banner');
+  const flash = document.getElementById('flash');
+  banner.classList.add('on'); flash.classList.add('on');
+  setTimeout(() => flash.classList.remove('on'), 260);
+  setTimeout(() => banner.classList.remove('on'), 2600);
+  if (reduce) return;
+  const colors = houses.map((house) => house.hex).concat(['#ffffff']);
+  for (let i = 0; i < 180; i++) {
+    confettiPieces.push({ x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.45, vx: (Math.random() - 0.5) * 16, vy: Math.random() * -15 - 4, g: 0.35 + Math.random() * 0.15, size: 6 + Math.random() * 7, rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3, color: colors[(Math.random() * colors.length) | 0], life: 0 });
+  }
+  if (confettiPieces.length) runConfetti();
+}
 function runConfetti() {
-    if (raf) return;
-    const tick = () => {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        pieces.forEach(p => {
-            p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life++;
-            p.vx *= 0.99;
-            ctx.save();
-            ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = Math.max(0, 1 - p.life/170);
-            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
-            ctx.restore();
-        });
-        pieces = pieces.filter(p => p.y < canvas.height + 40 && p.life < 180);
-        if (pieces.length) { raf = requestAnimationFrame(tick); }
-        else { ctx.clearRect(0,0,canvas.width,canvas.height); raf = null; }
-    };
-    raf = requestAnimationFrame(tick);
+  if (raf) return;
+  const tick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach((piece) => {
+      piece.vy += piece.g; piece.x += piece.vx; piece.y += piece.vy; piece.rot += piece.vr; piece.life += 1; piece.vx *= 0.99;
+      ctx.save(); ctx.translate(piece.x, piece.y); ctx.rotate(piece.rot); ctx.fillStyle = piece.color; ctx.globalAlpha = Math.max(0, 1 - piece.life / 170); ctx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.6); ctx.restore();
+    });
+    confettiPieces = confettiPieces.filter((piece) => piece.y < canvas.height + 40 && piece.life < 180);
+    if (confettiPieces.length) raf = requestAnimationFrame(tick);
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); raf = null; }
+  };
+  raf = requestAnimationFrame(tick);
 }
 
-/* =========================================================================
-   REFEREE TEST PANEL  (delete this whole block for production if you want)
-   ========================================================================= */
-const devRows = document.getElementById('devRows');
-houses.forEach(h => {
-    const row = document.createElement('div');
-    row.className = 'dev-row';
-    row.innerHTML = `
-    <span class="dot" style="background:${h.hex}"></span>
-    <span class="nm">${h.name}</span>
-    <input type="number" id="in-${h.id}" value="35" />
-    <button class="add" data-id="${h.id}">Add</button>`;
-    devRows.appendChild(row);
-});
-devRows.querySelectorAll('button.add').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const val = parseInt(document.getElementById('in-' + id).value, 10) || 0;
-        addScore(id, val);
-    });
-});
-document.getElementById('resetBtn').addEventListener('click', () => {
-    houses.forEach(h => h.score = 0);
-    celebrated = false;
-    render(); requestAnimationFrame(animateNumbers);
-});
-document.getElementById('targetBtn').addEventListener('click', () => {
-    const v = parseInt(prompt('Set liveliness target:', target), 10);
-    if (v > 0) { target = v; render(); }
-});
-const devPanel = document.getElementById('devPanel');
-document.getElementById('devToggle').addEventListener('click', () => devPanel.classList.toggle('open'));
-addEventListener('keydown', e => { if (e.key === 'd' || e.key === 'D') devPanel.classList.toggle('open'); });
-
-/* init */
+wireAdminPanel();
+connectSocket();
 render();
+requestAnimationFrame(animateNumbers);

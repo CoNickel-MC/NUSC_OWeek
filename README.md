@@ -1,22 +1,39 @@
-# NUSC_OWeek
+# NUSC OWeek Live Scores Manual
 
-This repository is a static frontend project.
+This website is a live scoreboard for NUSC OWeek house points. It shows each house score, the total score, a liveliness meter, and an Ollie jigsaw progress display that unlocks as the total score increases.
 
-## Run locally
+The website has two parts:
 
-### Option 1: PowerShell static server
+- **Frontend**: the page you open in the browser.
+- **Backend**: the Node.js server that stores scores, receives updates, and broadcasts live changes.
 
-From the repository folder:
+When a score changes, the backend sends the update to every open browser tab through WebSocket, so the scoreboard updates immediately without refreshing.
+
+## What This Website Does
+
+- Shows live scores for the six houses: Corvex, Osceanna, Idalia, Levios, Kairos, and Perseus.
+- Shows the total score and liveliness meter.
+- Reveals Ollie jigsaw pieces as the total score reaches meter checkpoints.
+- Saves scores and update history in `data/scores.json`.
+- Provides API endpoints that a Telegram bot can call later.
+- Includes a small on-page Controls panel for local testing.
+
+## How To Run It
+
+If `node` or `npm` is not recognized, install Node.js LTS:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\serve.ps1 -Port 8000
+winget install --id OpenJS.NodeJS.LTS -e
 ```
 
-Open `http://localhost:8000/` in your browser.
+After installing, close and reopen VS Code or PowerShell. Then check:
 
-### Option 2: Node/npm static server
+```powershell
+node --version
+npm --version
+```
 
-If you have Node.js installed:
+Run the website:
 
 ```powershell
 cd "C:\Users\yujix\OneDrive\Documents\NUS\Y1S2\Orbital\NUSC_OWeek"
@@ -24,12 +41,245 @@ npm install
 npm start
 ```
 
-Then open `http://localhost:8000/`.
+Open this in your browser:
 
-## Files
+```text
+http://localhost:3000
+```
 
-- `index.html` — main page
-- `script.js` — frontend logic
-- `stye.css` — page styles
-- `serve.ps1` — lightweight PowerShell static server
-- `NUSC_OWeek.code-workspace` — VS Code workspace file for this project
+## How Scores Are Updated
+
+The backend only accepts score updates from usernames listed in `AUTH_USERS`.
+
+For testing, the default allowed username is:
+
+```text
+your_telegram_username
+```
+
+To use your real Telegram username, start the server like this:
+
+```powershell
+$env:AUTH_USERS="your_telegram_username,another_admin"
+npm start
+```
+
+Use Telegram usernames without the `@` symbol. The backend is case-insensitive.
+
+Accepted team values are:
+
+```text
+h1, h2, h3, h4, h5, h6
+```
+
+or house names such as:
+
+```text
+Corvex, Osceanna, Idalia, Levios, Kairos, Perseus
+```
+
+### On-Page Controls
+
+Open `http://localhost:3000`, then click **Controls** at the bottom-right of the page.
+
+You can:
+
+- enter an authorized username
+- choose a house
+- add points
+- undo the latest score update
+
+These controls call the real backend API, so they behave the same way a Telegram bot request would.
+
+## How The Telegram Bot Links To It
+
+The Telegram bot is not implemented in this workspace yet. The website is backend-ready for it.
+
+The intended flow is:
+
+1. A referee sends a Telegram command, for example:
+
+```text
+/add Corvex 35
+```
+
+2. The Telegram bot reads:
+
+```text
+username = sender's Telegram username
+team = Corvex
+points = 35
+```
+
+3. The bot sends a POST request to the website backend:
+
+```http
+POST /api/score
+```
+
+with this JSON body:
+
+```json
+{
+  "username": "your_telegram_username",
+  "team": "Corvex",
+  "delta": 35
+}
+```
+
+4. The backend checks that the username is authorized.
+
+5. The backend updates `data/scores.json`.
+
+6. The backend broadcasts the new score to all open scoreboards through WebSocket.
+
+7. The website animates the score change automatically.
+
+For deployment later, the bot should send requests to the live server URL instead of `localhost`.
+
+## API Reference
+
+### Add Score
+
+```http
+POST /api/score
+```
+
+Body:
+
+```json
+{
+  "username": "your_telegram_username",
+  "team": "Corvex",
+  "delta": 35
+}
+```
+
+PowerShell test:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/score -ContentType "application/json" -Body '{"username":"your_telegram_username","team":"Corvex","delta":35}'
+```
+
+### Undo Latest Score Update
+
+```http
+POST /api/undo
+```
+
+Body:
+
+```json
+{
+  "username": "your_telegram_username"
+}
+```
+
+PowerShell test:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/undo -ContentType "application/json" -Body '{"username":"your_telegram_username"}'
+```
+
+### Reset Scores
+
+```http
+POST /api/reset
+```
+
+Start the server with an admin key:
+
+```powershell
+$env:ADMIN_KEY="some-secret"
+npm start
+```
+
+Body:
+
+```json
+{
+  "key": "some-secret",
+  "username": "admin"
+}
+```
+
+### Get Current Scores
+
+```http
+GET /api/scores
+```
+
+PowerShell test:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/scores
+```
+
+### Health Check
+
+```http
+GET /api/health
+```
+
+PowerShell test:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
+
+## Where Data Is Stored
+
+Scores and history are saved in:
+
+```text
+data/scores.json
+```
+
+This means scores survive server restarts. If you want to fully clear local data during testing, stop the server and edit `data/scores.json` back to zero scores and an empty history.
+
+## Ollie Jigsaw Image
+
+The Ollie jigsaw currently uses:
+
+```text
+assets/ollie-placeholder.svg
+```
+
+When the real Ollie image is ready, replace that file or update the image path in `index.html`.
+
+## Common Problems
+
+### `npm` is not recognized
+
+Node.js is either not installed, or your terminal has not refreshed after installation.
+
+Try closing and reopening VS Code or PowerShell. If it still fails, install Node.js:
+
+```powershell
+winget install --id OpenJS.NodeJS.LTS -e
+```
+
+### Unauthorized username
+
+The username used in the request is not listed in `AUTH_USERS`.
+
+Start the server with the correct username:
+
+```powershell
+$env:AUTH_USERS="your_actual_telegram_username"
+npm start
+```
+
+### Score changes do not appear in the browser
+
+Make sure the server is running and the page was opened from:
+
+```text
+http://localhost:3000
+```
+
+Do not open `index.html` directly from the file system, because WebSocket updates need the backend server.
+
+### Scores came back after restarting
+
+That is expected. Scores persist in `data/scores.json`.

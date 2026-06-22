@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NUSC O'Week — House Scores</title>
+    <title>NUSC OWeek - House Scores</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./stye.css">
+    <link rel="stylesheet" href="./stye.css" />
 </head>
 <body>
 <div class="flash" id="flash"></div>
@@ -16,43 +16,71 @@
 
 <div class="wrap">
     <header>
-        <h1 class="title">NUSC O'Week</h1>
+        <h1 class="title">NUSC OWeek</h1>
         <p class="subtitle">House Scores</p>
     </header>
 
-    <!-- Liveliness meter (the hero) -->
     <section class="meter" id="meter" aria-label="Liveliness meter">
         <div class="meter-head">
             <div class="meter-label"><span class="pulse-dot"></span> Liveliness Meter</div>
             <div class="meter-readout"><b id="meterNow">0</b> / <span id="meterTarget">1000</span></div>
         </div>
-        <div class="track">
+        <div class="track" id="track">
             <div class="fill" id="fill"></div>
-            <div class="threshold" id="thresholdMark"><span>TARGET</span></div>
+            <div class="ridge" style="left: 20%"></div>
+            <div class="ridge" style="left: 40%"></div>
+            <div class="ridge" style="left: 60%"></div>
+            <div class="ridge" style="left: 80%"></div>
+            <div class="threshold"><span>TARGET</span></div>
         </div>
     </section>
 
-    <!-- Total -->
     <section class="total">
-        <div class="label">Total</div>
+        <div>
+            <div class="label">Total</div>
+            <div class="connection" id="connectionStatus">Connecting...</div>
+        </div>
         <div class="value" id="totalValue">0</div>
     </section>
 
-    <!-- House cards -->
+    <section class="ollie" aria-label="Ollie progress">
+        <div class="ollie-copy">
+            <div class="eyebrow">Ollie Progress</div>
+            <h2>Build Ollie as the liveliness meter climbs</h2>
+        </div>
+        <div class="jigsaw" id="jigsaw" aria-hidden="true">
+            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
+            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
+            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
+            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
+            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
+        </div>
+    </section>
+
     <main class="grid" id="grid"></main>
 </div>
 
-<!-- Referee test panel (hidden on the live screen; press D to toggle) -->
-<!--<button class="dev-toggle" id="devToggle" title="Test panel (D)" aria-label="Toggle test panel">⚙</button>-->
-<!--<div class="dev" id="devPanel">-->
-<!--    <h3>Referee test panel</h3>-->
-<!--    <p>For testing before the backend is wired. Press <b>D</b> to hide. The real updates will arrive over WebSocket.</p>-->
-<!--    <div id="devRows"></div>-->
-<!--    <div class="util">-->
-<!--        <button id="resetBtn">Reset scores</button>-->
-<!--        <button id="targetBtn">Set target</button>-->
-<!--    </div>-->
-<!--</div>-->
+<button class="admin-toggle" id="adminToggle" type="button" title="Score controls">Controls</button>
+<section class="admin" id="adminPanel" aria-label="Score controls">
+    <h2>Score Controls</h2>
+    <form id="scoreForm">
+        <label>Username <input id="usernameInput" name="username" value="your_telegram_username" autocomplete="off" /></label>
+        <label>House
+            <select id="teamInput" name="team">
+                <option value="Corvex">Corvex</option>
+                <option value="Osceanna">Osceanna</option>
+                <option value="Idalia">Idalia</option>
+                <option value="Levios">Levios</option>
+                <option value="Kairos">Kairos</option>
+                <option value="Perseus">Perseus</option>
+            </select>
+        </label>
+        <label>Points <input id="deltaInput" name="delta" type="number" value="35" step="1" /></label>
+        <button type="submit">Add points</button>
+    </form>
+    <button type="button" id="undoBtn">Undo latest</button>
+    <p id="adminMessage"></p>
+</section>
 
 <script src="./script.js"></script>
 </body>

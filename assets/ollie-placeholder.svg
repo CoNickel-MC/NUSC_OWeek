@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" role="img" aria-label="Ollie placeholder">
+  <rect width="600" height="300" fill="#10142f"/>
+  <circle cx="300" cy="138" r="86" fill="#f7d58a"/>
+  <circle cx="265" cy="125" r="10" fill="#1a1f38"/>
+  <circle cx="335" cy="125" r="10" fill="#1a1f38"/>
+  <path d="M252 164c32 32 68 32 96 0" fill="none" stroke="#1a1f38" stroke-width="12" stroke-linecap="round"/>
+  <path d="M215 72c42-48 128-48 170 0" fill="none" stroke="#ff6fb5" stroke-width="20" stroke-linecap="round"/>
+  <text x="300" y="268" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#f4f6ff">OLLIE</text>
+</svg>
