@@ -1,6 +1,6 @@
 # NUSC OWeek Live Scores Manual
 
-This website is a live scoreboard for NUSC OWeek house points. It shows each house score, the total score, a liveliness meter, and an Ollie jigsaw progress display that unlocks as the total score increases.
+This website is a live scoreboard for NUSC OWeek house points. It shows each house score, the total score, a liveliness meter, and an Ollie reveal that fills with color as the total score increases.
 
 The website has two parts:
 
@@ -13,7 +13,7 @@ When a score changes, the backend sends the update to every open browser tab thr
 
 - Shows live scores for the six houses: Corvex, Osceanna, Idalia, Levios, Kairos, and Perseus.
 - Shows the total score and liveliness meter.
-- Reveals Ollie jigsaw pieces as the total score reaches meter checkpoints.
+- Reveals Ollie from a black silhouette into full color as the liveliness meter charges up.
 - Saves scores and update history in `data/scores.json`.
 - Provides API endpoints that a Telegram bot can call later.
 - Includes a small on-page Controls panel for local testing.
@@ -237,15 +237,15 @@ data/scores.json
 
 This means scores survive server restarts. If you want to fully clear local data during testing, stop the server and edit `data/scores.json` back to zero scores and an empty history.
 
-## Ollie Jigsaw Image
+## Ollie Reveal Image
 
-The Ollie jigsaw currently uses:
+The Ollie reveal uses:
 
 ```text
-assets/ollie-placeholder.svg
+assets/ollie.jpg
 ```
 
-When the real Ollie image is ready, replace that file or update the image path in `index.html`.
+The browser removes the white background at runtime, then layers a black silhouette under the color image. The reveal radius is mapped to the liveliness meter by visible area, so 50% points reveals about 50% of Ollie.
 
 ## Common Problems
 

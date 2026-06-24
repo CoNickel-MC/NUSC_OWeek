@@ -20,6 +20,19 @@
         <p class="subtitle">House Scores</p>
     </header>
 
+    <section class="ollie" aria-label="Ollie reveal progress">
+        <div class="ollie-copy">
+            <div class="eyebrow">Ollie Charge</div>
+            <h2>Bring Ollie to life as the meter fills</h2>
+            <div class="ollie-readout"><span id="olliePercent">0%</span> revealed</div>
+        </div>
+        <div class="ollie-stage" id="ollieStage">
+            <img class="ollie-img ollie-shadow" id="ollieShadow" alt="" />
+            <img class="ollie-img ollie-color" id="ollieColor" alt="Ollie the otter mascot" />
+            <div class="ollie-glow" aria-hidden="true"></div>
+        </div>
+    </section>
+
     <section class="meter" id="meter" aria-label="Liveliness meter">
         <div class="meter-head">
             <div class="meter-label"><span class="pulse-dot"></span> Liveliness Meter</div>
@@ -41,20 +54,6 @@
             <div class="connection" id="connectionStatus">Connecting...</div>
         </div>
         <div class="value" id="totalValue">0</div>
-    </section>
-
-    <section class="ollie" aria-label="Ollie progress">
-        <div class="ollie-copy">
-            <div class="eyebrow">Ollie Progress</div>
-            <h2>Build Ollie as the liveliness meter climbs</h2>
-        </div>
-        <div class="jigsaw" id="jigsaw" aria-hidden="true">
-            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
-            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
-            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
-            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
-            <div class="piece"><img src="./assets/ollie-placeholder.svg" alt="" /></div>
-        </div>
     </section>
 
     <main class="grid" id="grid"></main>

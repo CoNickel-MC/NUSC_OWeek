@@ -1,5 +1,6 @@
 const TARGET = 1000;
-const CHECKPOINTS = [0.2, 0.4, 0.6, 0.8, 1];
+const OLLIE_IMAGE = './assets/ollie.jpg';
+const MAX_REVEAL_RADIUS = 74;
 const houses = [
   { id: 'h1', name: 'Corvex', color: 'var(--h1)', hex: '#029145', score: 0 },
   { id: 'h2', name: 'Osceanna', color: 'var(--h2)', hex: '#223b90', score: 0 },
@@ -23,6 +24,10 @@ const meterTargetEl = document.getElementById('meterTarget');
 const meterEl = document.getElementById('meter');
 const statusEl = document.getElementById('connectionStatus');
 const adminMessageEl = document.getElementById('adminMessage');
+const ollieStageEl = document.getElementById('ollieStage');
+const ollieShadowEl = document.getElementById('ollieShadow');
+const ollieColorEl = document.getElementById('ollieColor');
+const olliePercentEl = document.getElementById('olliePercent');
 
 houses.forEach((house) => {
   const el = document.createElement('article');
@@ -46,8 +51,9 @@ function render() {
   const currentTotal = total();
   meterTargetEl.textContent = target;
   meterNowEl.textContent = currentTotal;
-  fillEl.style.width = `${Math.max(0, Math.min(100, (currentTotal / target) * 100))}%`;
-  updateJigsaw(currentTotal / target);
+  const progress = Math.max(0, Math.min(1, currentTotal / target));
+  fillEl.style.width = `${progress * 100}%`;
+  updateOllieReveal(progress);
   if (currentTotal >= target && !celebrated) { celebrate(); celebrated = true; meterEl.classList.add('lit'); }
   if (currentTotal < target) { celebrated = false; meterEl.classList.remove('lit'); }
 }
@@ -66,12 +72,19 @@ function animateNumbers() {
   totalValueEl.textContent = houses.reduce((sum, house) => sum + display[house.id], 0);
   if (any) requestAnimationFrame(animateNumbers);
 }
-function updateJigsaw(progress) {
-  const pieces = document.querySelectorAll('.piece');
-  const nextUnlocked = CHECKPOINTS.filter((checkpoint) => progress >= checkpoint).length;
-  pieces.forEach((piece, index) => piece.classList.toggle('revealed', index < nextUnlocked));
-  if (nextUnlocked > unlockedPieces && nextUnlocked > 0) {
-    document.getElementById('banner').textContent = `OLLIE PIECE ${nextUnlocked}!`;
+function updateOllieReveal(progress) {
+  const revealRadius = Math.sqrt(progress) * MAX_REVEAL_RADIUS;
+  const maskInner = Math.max(0, revealRadius - 8);
+  const maskMid = Math.max(0, revealRadius - 2);
+  ollieStageEl.style.setProperty('--ollie-progress', progress.toFixed(4));
+  ollieStageEl.style.setProperty('--ollie-reveal-radius', `${revealRadius.toFixed(2)}%`);
+  ollieStageEl.style.setProperty('--ollie-mask-inner', `${maskInner.toFixed(2)}%`);
+  ollieStageEl.style.setProperty('--ollie-mask-mid', `${maskMid.toFixed(2)}%`);
+  ollieStageEl.style.setProperty('--ollie-glow-opacity', (0.16 + progress * 0.22).toFixed(3));
+  olliePercentEl.textContent = `${Math.round(progress * 100)}%`;
+  const nextUnlocked = Math.floor(progress * 5);
+  if (nextUnlocked > unlockedPieces && progress < 1) {
+    document.getElementById('banner').textContent = `OLLIE ${Math.round(progress * 100)}%!`;
     celebrate();
     setTimeout(() => { document.getElementById('banner').textContent = 'MAX HYPE!'; }, 2600);
   }
@@ -131,6 +144,39 @@ function wireAdminPanel() {
   });
 }
 
+function prepareOllieImage() {
+  const source = new Image();
+  source.src = OLLIE_IMAGE;
+  source.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = source.naturalWidth;
+    canvas.height = source.naturalHeight;
+    const imageContext = canvas.getContext('2d');
+    imageContext.drawImage(source, 0, 0);
+    const frame = imageContext.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = frame.data;
+    for (let i = 0; i < pixels.length; i += 4) {
+      const red = pixels[i];
+      const green = pixels[i + 1];
+      const blue = pixels[i + 2];
+      const nearWhite = red > 238 && green > 238 && blue > 238;
+      if (nearWhite) {
+        pixels[i + 3] = Math.max(0, 255 - (Math.min(red, green, blue) - 238) * 15);
+      }
+    }
+    imageContext.putImageData(frame, 0, 0);
+    const transparentOllie = canvas.toDataURL('image/png');
+    ollieShadowEl.src = transparentOllie;
+    ollieColorEl.src = transparentOllie;
+    ollieStageEl.classList.add('loaded');
+  };
+  source.onerror = () => {
+    ollieShadowEl.src = OLLIE_IMAGE;
+    ollieColorEl.src = OLLIE_IMAGE;
+    ollieStageEl.classList.add('loaded');
+  };
+}
+
 const canvas = document.getElementById('confetti');
 const ctx = canvas.getContext('2d');
 let confettiPieces = [];
@@ -168,6 +214,7 @@ function runConfetti() {
 }
 
 wireAdminPanel();
+prepareOllieImage();
 connectSocket();
 render();
 requestAnimationFrame(animateNumbers);

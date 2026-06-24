@@ -1,11 +1,118 @@
 {
   "scores": {
-    "h1": 0,
+    "h1": 670,
     "h2": 0,
     "h3": 0,
     "h4": 0,
     "h5": 0,
     "h6": 0
   },
-  "history": []
+  "history": [
+    {
+      "id": "1782132901620-8qs1bo",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 35,
+      "before": 0,
+      "after": 35,
+      "timestamp": "2026-06-22T12:55:01.620Z",
+      "undoneBy": "1782132920801-dqojki"
+    },
+    {
+      "id": "1782132908303-w7mf2e",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 200,
+      "before": 35,
+      "after": 235,
+      "timestamp": "2026-06-22T12:55:08.303Z",
+      "undoneBy": "1782132920434-f5d9gg"
+    },
+    {
+      "id": "1782132913793-egup3d",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 500,
+      "before": 235,
+      "after": 735,
+      "timestamp": "2026-06-22T12:55:13.793Z",
+      "undoneBy": "1782132919896-fnx8vy"
+    },
+    {
+      "id": "1782132919896-fnx8vy",
+      "type": "undo",
+      "username": "your_telegram_username",
+      "undoneEventId": "1782132913793-egup3d",
+      "team": "h1",
+      "delta": -500,
+      "before": 735,
+      "after": 235,
+      "timestamp": "2026-06-22T12:55:19.896Z"
+    },
+    {
+      "id": "1782132920434-f5d9gg",
+      "type": "undo",
+      "username": "your_telegram_username",
+      "undoneEventId": "1782132908303-w7mf2e",
+      "team": "h1",
+      "delta": -200,
+      "before": 235,
+      "after": 35,
+      "timestamp": "2026-06-22T12:55:20.435Z"
+    },
+    {
+      "id": "1782132920801-dqojki",
+      "type": "undo",
+      "username": "your_telegram_username",
+      "undoneEventId": "1782132901620-8qs1bo",
+      "team": "h1",
+      "delta": -35,
+      "before": 35,
+      "after": 0,
+      "timestamp": "2026-06-22T12:55:20.801Z"
+    },
+    {
+      "id": "1782226773788-ckh8ae",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 35,
+      "before": 0,
+      "after": 35,
+      "timestamp": "2026-06-23T14:59:33.788Z"
+    },
+    {
+      "id": "1782227411187-ikbqnp",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 35,
+      "before": 35,
+      "after": 70,
+      "timestamp": "2026-06-23T15:10:11.187Z"
+    },
+    {
+      "id": "1782227416376-4mr8y9",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 300,
+      "before": 70,
+      "after": 370,
+      "timestamp": "2026-06-23T15:10:16.376Z"
+    },
+    {
+      "id": "1782228951659-23yid5",
+      "type": "score",
+      "username": "your_telegram_username",
+      "team": "h1",
+      "delta": 300,
+      "before": 370,
+      "after": 670,
+      "timestamp": "2026-06-23T15:35:51.659Z"
+    }
+  ]
 }
