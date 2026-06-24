@@ -1,6 +1,6 @@
 # NUSC OWeek Live Scores Manual
 
-This website is a live scoreboard for NUSC OWeek house points. It shows each house score, the total score, a liveliness meter, and an Ollie reveal that fills with color as the total score increases.
+This website is a live scoreboard for NUSC OWeek house points. It shows each house score, the total score, a liveliness meter, and an Ollie image that gets clearer as the total score increases.
 
 The website has two parts:
 
@@ -13,7 +13,7 @@ When a score changes, the backend sends the update to every open browser tab thr
 
 - Shows live scores for the six houses: Corvex, Osceanna, Idalia, Levios, Kairos, and Perseus.
 - Shows the total score and liveliness meter.
-- Reveals Ollie from a black silhouette into full color as the liveliness meter charges up.
+- Makes Ollie progressively clearer as the liveliness meter charges up.
 - Saves scores and update history in `data/scores.json`.
 - Provides API endpoints that a Telegram bot can call later.
 - Includes a small on-page Controls panel for local testing.
@@ -37,6 +37,7 @@ Run the website:
 
 ```powershell
 cd "C:\Users\yujix\OneDrive\Documents\NUS\Y1S2\Orbital\NUSC_OWeek"
+$env:AUTH_USERS="your_telegram_username,another_admin"
 npm install
 npm start
 ```
@@ -93,7 +94,7 @@ These controls call the real backend API, so they behave the same way a Telegram
 
 ## How The Telegram Bot Links To It
 
-The Telegram bot is not implemented in this workspace yet. The website is backend-ready for it.
+The Telegram bot lives in the sibling `O-Week_TelegramBot` repository. It sends score updates to this backend through the API below.
 
 The intended flow is:
 
@@ -135,7 +136,17 @@ with this JSON body:
 
 7. The website animates the score change automatically.
 
-For deployment later, the bot should send requests to the live server URL instead of `localhost`.
+For local testing, run the Telegram bot from the sibling folder:
+
+```powershell
+cd "C:\Users\yujix\OneDrive\Documents\NUS\Y1S2\Orbital\O-Week_TelegramBot"
+$env:TELEGRAM_BOT_TOKEN="your_bot_token"
+$env:AUTH_USERS="your_telegram_username,another_admin"
+$env:BACKEND_URL="http://localhost:3000"
+.\gradlew.bat run
+```
+
+For deployment later, set `BACKEND_URL` to the live server URL instead of `localhost`.
 
 ## API Reference
 
@@ -239,13 +250,13 @@ This means scores survive server restarts. If you want to fully clear local data
 
 ## Ollie Reveal Image
 
-The Ollie reveal uses:
+The Ollie clarity effect uses:
 
 ```text
 assets/ollie.jpg
 ```
 
-The browser removes the white background at runtime, then layers a black silhouette under the color image. The reveal radius is mapped to the liveliness meter by visible area, so 50% points reveals about 50% of Ollie.
+The browser removes the white background at runtime, then reduces blur and increases saturation as the liveliness meter fills.
 
 ## Common Problems
 

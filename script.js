@@ -1,6 +1,5 @@
 const TARGET = 1000;
 const OLLIE_IMAGE = './assets/ollie.jpg';
-const MAX_REVEAL_RADIUS = 74;
 const houses = [
   { id: 'h1', name: 'Corvex', color: 'var(--h1)', hex: '#029145', score: 0 },
   { id: 'h2', name: 'Osceanna', color: 'var(--h2)', hex: '#223b90', score: 0 },
@@ -12,7 +11,7 @@ const houses = [
 
 let target = TARGET;
 let celebrated = false;
-let unlockedPieces = 0;
+let clarityMilestone = 0;
 const display = {};
 houses.forEach((house) => { display[house.id] = 0; });
 
@@ -25,8 +24,7 @@ const meterEl = document.getElementById('meter');
 const statusEl = document.getElementById('connectionStatus');
 const adminMessageEl = document.getElementById('adminMessage');
 const ollieStageEl = document.getElementById('ollieStage');
-const ollieShadowEl = document.getElementById('ollieShadow');
-const ollieColorEl = document.getElementById('ollieColor');
+const ollieImageEl = document.getElementById('ollieImage');
 const olliePercentEl = document.getElementById('olliePercent');
 
 houses.forEach((house) => {
@@ -53,7 +51,7 @@ function render() {
   meterNowEl.textContent = currentTotal;
   const progress = Math.max(0, Math.min(1, currentTotal / target));
   fillEl.style.width = `${progress * 100}%`;
-  updateOllieReveal(progress);
+  updateOllieClarity(progress);
   if (currentTotal >= target && !celebrated) { celebrate(); celebrated = true; meterEl.classList.add('lit'); }
   if (currentTotal < target) { celebrated = false; meterEl.classList.remove('lit'); }
 }
@@ -72,23 +70,25 @@ function animateNumbers() {
   totalValueEl.textContent = houses.reduce((sum, house) => sum + display[house.id], 0);
   if (any) requestAnimationFrame(animateNumbers);
 }
-function updateOllieReveal(progress) {
-  const revealRadius = Math.sqrt(progress) * MAX_REVEAL_RADIUS;
-  const maskInner = Math.max(0, revealRadius - 8);
-  const maskMid = Math.max(0, revealRadius - 2);
+function updateOllieClarity(progress) {
+  const blur = (1 - progress) * 14;
+  const saturation = 0.45 + progress * 0.65;
+  const contrast = 0.82 + progress * 0.22;
+  const opacity = 0.48 + progress * 0.52;
   ollieStageEl.style.setProperty('--ollie-progress', progress.toFixed(4));
-  ollieStageEl.style.setProperty('--ollie-reveal-radius', `${revealRadius.toFixed(2)}%`);
-  ollieStageEl.style.setProperty('--ollie-mask-inner', `${maskInner.toFixed(2)}%`);
-  ollieStageEl.style.setProperty('--ollie-mask-mid', `${maskMid.toFixed(2)}%`);
+  ollieStageEl.style.setProperty('--ollie-blur', `${blur.toFixed(2)}px`);
+  ollieStageEl.style.setProperty('--ollie-saturation', saturation.toFixed(3));
+  ollieStageEl.style.setProperty('--ollie-contrast', contrast.toFixed(3));
+  ollieStageEl.style.setProperty('--ollie-opacity', opacity.toFixed(3));
   ollieStageEl.style.setProperty('--ollie-glow-opacity', (0.16 + progress * 0.22).toFixed(3));
   olliePercentEl.textContent = `${Math.round(progress * 100)}%`;
   const nextUnlocked = Math.floor(progress * 5);
-  if (nextUnlocked > unlockedPieces && progress < 1) {
+  if (nextUnlocked > clarityMilestone && progress < 1) {
     document.getElementById('banner').textContent = `OLLIE ${Math.round(progress * 100)}%!`;
     celebrate();
     setTimeout(() => { document.getElementById('banner').textContent = 'MAX HYPE!'; }, 2600);
   }
-  unlockedPieces = nextUnlocked;
+  clarityMilestone = nextUnlocked;
 }
 function setScore(id, value) {
   const house = houses.find((item) => item.id === id || item.name.toLowerCase() === String(id).toLowerCase());
@@ -166,13 +166,11 @@ function prepareOllieImage() {
     }
     imageContext.putImageData(frame, 0, 0);
     const transparentOllie = canvas.toDataURL('image/png');
-    ollieShadowEl.src = transparentOllie;
-    ollieColorEl.src = transparentOllie;
+    ollieImageEl.src = transparentOllie;
     ollieStageEl.classList.add('loaded');
   };
   source.onerror = () => {
-    ollieShadowEl.src = OLLIE_IMAGE;
-    ollieColorEl.src = OLLIE_IMAGE;
+    ollieImageEl.src = OLLIE_IMAGE;
     ollieStageEl.classList.add('loaded');
   };
 }
